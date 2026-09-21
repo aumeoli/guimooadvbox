@@ -59,10 +59,16 @@ function createLawsuit(payload) {
   return request('POST', '/lawsuits', { body: payload });
 }
 
+/** GET /lawsuits com filtros — usado para listar processos por data de criação. */
+function listLawsuits(query) {
+  return request('GET', '/lawsuits', { query });
+}
+
 module.exports = {
   AdvboxApiError,
   getSettings,
   findCustomers,
   createCustomer,
   createLawsuit,
+  listLawsuits,
 };

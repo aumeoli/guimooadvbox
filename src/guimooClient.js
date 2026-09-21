@@ -9,7 +9,7 @@ class GuimooApiError extends Error {
   }
 }
 
-async function request(method, path, { query } = {}) {
+async function request(method, path, { query, body } = {}) {
   const url = new URL(config.guimoo.baseUrl + path);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
@@ -23,7 +23,9 @@ async function request(method, path, { query } = {}) {
       Authorization: `Bearer ${config.guimoo.apiKey}`,
       'X-API-Key': config.guimoo.apiKey,
       Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
+    body: body ? JSON.stringify(body) : undefined,
   });
 
   const text = await res.text();
@@ -55,10 +57,24 @@ function getCamposPersonalizadosDefinitions() {
   return request('GET', '/crm/campos-personalizados');
 }
 
+/** GET /crm/negociacoes — lista paginada (mais recentes primeiro), embute contato{nome,telefone,Email} */
+function listNegociacoes(page) {
+  return request('GET', '/crm/negociacoes', { query: { page } });
+}
+
+/** POST /whatsapp/mensagem/texto — envia mensagem de texto simples. */
+function sendWhatsappText({ idWhatsapp, number, text, skipIntervencao = true }) {
+  return request('POST', '/whatsapp/mensagem/texto', {
+    body: { id_whatsapp: idWhatsapp, number, text, skip_intervencao: skipIntervencao },
+  });
+}
+
 module.exports = {
   GuimooApiError,
   getNegociacao,
   getContato,
   getNegociacaoCamposPersonalizados,
   getCamposPersonalizadosDefinitions,
+  listNegociacoes,
+  sendWhatsappText,
 };

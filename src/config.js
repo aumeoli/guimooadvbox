@@ -46,6 +46,32 @@ const config = {
     fase: Number(process.env.GUIMOO_FIELD_ID_FASE) || 8904,
     etapa: Number(process.env.GUIMOO_FIELD_ID_ETAPA) || 8905,
   },
+
+  zapsign: {
+    baseUrl: process.env.ZAPSIGN_BASE_URL || 'https://api.zapsign.com.br/api/v1',
+    get token() {
+      return required('ZAPSIGN_TOKEN');
+    },
+  },
+
+  meta: {
+    get accessToken() {
+      return required('META_ACCESS_TOKEN');
+    },
+    get adAccountId() {
+      return required('META_AD_ACCOUNT_ID');
+    },
+  },
+
+  dailyReport: {
+    numbers: (process.env.DAILY_REPORT_NUMBERS || '').split(',').map((s) => s.trim()).filter(Boolean),
+    // formato cron (node-cron): "0 18 * * *" = todo dia às 18h no fuso abaixo.
+    cron: process.env.DAILY_REPORT_CRON || '0 18 * * *',
+    timezone: process.env.DAILY_REPORT_TZ || 'America/Manaus',
+    whatsappIdComercial: Number(process.env.GUIMOO_WHATSAPP_ID_COMERCIAL) || null,
+    // protege o endpoint de disparo manual (/daily-report/run) contra chamadas de fora.
+    triggerSecret: process.env.DAILY_REPORT_SECRET || null,
+  },
 };
 
 module.exports = config;
