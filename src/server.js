@@ -14,8 +14,14 @@ app.post('/webhooks/guimoo', handleGuimooWebhook);
 // Disparo manual/teste do relatório diário — protegido por DAILY_REPORT_SECRET.
 // ?dry=true monta e retorna a mensagem sem enviar; ?date=YYYY-MM-DD simula outro dia.
 app.get('/daily-report/run', async (req, res) => {
-  if (config.dailyReport.triggerSecret && req.query.secret !== config.dailyReport.triggerSecret) {
-    return res.status(401).json({ error: 'secret inválido ou ausente (?secret=)' });
+  // Fail-closed: sem DAILY_REPORT_SECRET configurado, o endpoint fica desabilitado
+  // (nunca aberto por padrão). O secret vai no header, não na query string, pra não
+  // ficar exposto em logs de acesso/URL — mesmo padrão do X-Webhook-Secret da Guimoo.
+  if (!config.dailyReport.triggerSecret) {
+    return res.status(503).json({ error: 'DAILY_REPORT_SECRET não configurado — endpoint desabilitado.' });
+  }
+  if (req.get('x-daily-report-secret') !== config.dailyReport.triggerSecret) {
+    return res.status(401).json({ error: 'secret inválido ou ausente (header X-Daily-Report-Secret)' });
   }
   try {
     const dry = req.query.dry === 'true';

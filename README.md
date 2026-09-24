@@ -115,6 +115,33 @@ curl -X POST http://localhost:3000/webhooks/guimoo \
 (Usa dados reais de teste desta conta — troque pelos IDs de uma negociação
 sua com os campos personalizados preenchidos.)
 
+## Relatório diário por WhatsApp
+
+Além do webhook, o serviço tem um segundo recurso independente: um relatório
+diário (Meta Ads + Guimoo + ZapSign + AdvBox das últimas 24h) enviado por
+WhatsApp via `src/dailyReport.js`.
+
+- **Agendado** automaticamente via `node-cron` (`DAILY_REPORT_CRON`, default
+  `0 18 * * *` no fuso `DAILY_REPORT_TZ`) — só liga se `DAILY_REPORT_NUMBERS`
+  e `GUIMOO_WHATSAPP_ID_COMERCIAL` estiverem configurados.
+- **Disparo manual/teste:** `GET /daily-report/run` (`?dry=true` só monta e
+  devolve a mensagem sem enviar; `?date=YYYY-MM-DD` simula outro dia).
+
+Esse endpoint é **fail-closed**: sem `DAILY_REPORT_SECRET` configurado, ele
+fica desabilitado (responde 503) em vez de aberto. Com o secret configurado,
+a chamada exige o header `X-Daily-Report-Secret` — nunca em query string,
+pra não vazar em log de acesso/URL:
+
+```bash
+curl -H "X-Daily-Report-Secret: SEU_SECRET" \
+  "https://SEU_HOST/daily-report/run?dry=true"
+```
+
+Variáveis extras que esse recurso precisa (além das da seção Setup):
+`ZAPSIGN_TOKEN`, `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID`,
+`DAILY_REPORT_NUMBERS` (telefones separados por vírgula, com DDI),
+`DAILY_REPORT_CRON`, `DAILY_REPORT_TZ`, `DAILY_REPORT_SECRET`.
+
 ## Segurança dos tokens
 
 A AdvBox e a Guimoo pedem que os tokens nunca sejam expostos em código-fonte,
